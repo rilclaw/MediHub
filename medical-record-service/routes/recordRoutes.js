@@ -111,4 +111,95 @@ router.get('/patient/:patientId', async (req, res) => {
     });
 });
 
+// --- PUT /api/records/:id (Hanya Update Detail Medis) ---
+router.put('/:id', async (req, res) => {
+    const recordId = parseInt(req.params.id); // Pastikan konversi ke integer
+    const body = req.body || {};
+    
+    // 1. Ambil data lama untuk digunakan sebagai fallback dan verifikasi keberadaan record
+    let oldRecord;
+    try {
+        const results = await new Promise((resolve, reject) => {
+            db.query('SELECT * FROM medical_records WHERE id = ?', [recordId], (err, res) => {
+                if (err) return reject(err);
+                resolve(res);
+            });
+        });
+
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Rekam Medis tidak ditemukan.' });
+        }
+        oldRecord = results[0];
+    } catch (err) {
+        console.error('DATABASE ERROR during record retrieval:', err.message);
+        return res.status(500).json({ error: 'Gagal mengambil data lama dari database.' });
+    }
+    
+    // 2. Tentukan Nilai Update (Partial Update)
+    // patient_id selalu menggunakan nilai LAMA (oldRecord.patient_id)
+    const patient_id = oldRecord.patient_id; 
+    
+    // Field lain menggunakan nilai BARU (body) atau nilai LAMA
+    const diagnosis = body.diagnosis || oldRecord.diagnosis;
+    const treatment = body.treatment || oldRecord.treatment;
+    const visit_date = body.visit_date || oldRecord.visit_date;
+
+    // VALIDASI SEDERHANA: Pastikan setidaknya ada data untuk di-update
+    // Kita tidak perlu validasi patient_id, karena kita menggunakan yang lama.
+    if (!body.diagnosis && !body.treatment && !body.visit_date) {
+        return res.status(400).json({ message: 'Minimal salah satu field (diagnosis, treatment, atau visit_date) wajib diisi untuk update.' });
+    }
+
+    // 3. Lakukan Update di DB lokal (Gunakan semua data, lama dan baru)
+    const sql = `
+        UPDATE medical_records 
+        SET patient_id = ?, diagnosis = ?, treatment = ?, visit_date = ?
+        WHERE id = ?
+    `;
+    const values = [patient_id, diagnosis, treatment, visit_date, recordId];
+    
+    db.query(sql, values, (err, result) => {
+        if (err) {
+            console.error('Database error during update:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        
+        if (result.affectedRows === 0) {
+            // Seharusnya tidak terjadi jika sudah melewati SELECT, tapi untuk keamanan
+            return res.status(404).json({ message: 'Rekam Medis tidak ditemukan (setelah SELECT).' }); 
+        }
+
+        // Ambil data terbaru untuk response
+        db.query('SELECT * FROM medical_records WHERE id = ?', [recordId], (err2, results) => {
+             if (err2) return res.status(500).json({ error: err2.message });
+             res.status(200).json({
+                 message: 'Detail Rekam Medis berhasil diperbarui tanpa memverifikasi Patient Service!',
+                 record: results[0]
+             });
+         });
+    });
+});
+
+// --- DELETE /api/records/:id (Hapus Rekam Medis) ---
+router.delete('/:id', (req, res) => {
+    const recordId = req.params.id;
+    const sql = 'DELETE FROM medical_records WHERE id = ?';
+
+    db.query(sql, [recordId], (err, result) => {
+        if (err) {
+            console.error('Database error during delete:', err);
+            return res.status(500).json({ error: err.message });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Rekam Medis tidak ditemukan.' });
+        }
+
+        res.status(200).json({ 
+            message: 'Rekam Medis berhasil dihapus!',
+            deleted_record_id: recordId
+        });
+    });
+});
+
 module.exports = router;

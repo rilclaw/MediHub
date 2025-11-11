@@ -67,7 +67,25 @@ router.put('/:id', (req, res) => {
     });
 });
 
+router.delete('/:id', (req, res) => {
+    const patientId = req.params.id;
+    const sql = `DELETE FROM patients WHERE id = ?`;
 
+    db.query(sql, [patientId], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
 
+        // Periksa apakah ada baris yang terhapus (affectedRows > 0)
+        if (result.affectedRows === 0) {
+            // Jika affectedRows 0, berarti pasien dengan ID tersebut tidak ditemukan
+            return res.status(404).json({ message: 'Pasien tidak ditemukan.' });
+        }
+
+        // Jika berhasil dihapus
+        res.status(200).json({ 
+            message: 'Data pasien berhasil dihapus!',
+            deleted_id: patientId 
+        });
+    });
+});
 
 module.exports = router;
