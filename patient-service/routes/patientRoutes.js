@@ -32,6 +32,42 @@ router.get('/:id', (req, res) => {
     });
 });
 
+// PUT: /api/patients/:id (Update data pasien)
+router.put('/:id', (req, res) => {
+    const patientId = req.params.id;
+    const { name, age, gender, disease, address } = req.body;
+
+    // Validasi input sederhana
+    if (!name || !age || !gender) {
+        return res.status(400).json({ error: 'Field name, age, dan gender wajib diisi.' });
+    }
+
+    const sql = `
+        UPDATE patients 
+        SET name = ?, age = ?, gender = ?, disease = ?, address = ?
+        WHERE id = ?
+    `;
+    const values = [name, age, gender, disease, address, patientId];
+
+    db.query(sql, values, (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Pasien tidak ditemukan.' });
+        }
+
+        // Ambil data terbaru setelah update
+        db.query('SELECT * FROM patients WHERE id = ?', [patientId], (err2, results) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            res.status(200).json({
+                message: 'Data pasien berhasil diperbarui!',
+                patient: results[0]
+            });
+        });
+    });
+});
+
+
 
 
 module.exports = router;
