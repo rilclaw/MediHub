@@ -1,0 +1,134 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediHub - Beranda</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h1>MediHub</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html" class="active">Beranda</a></li>
+        <li><a href="add-patient.html">Add</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- Header -->
+    <header class="header">
+      <h2>Halaman Awal</h2>
+      <button class="profile-btn">Profile</button>
+    </header>
+
+    <!-- Stats Cards -->
+    <div class="dashboard-stats">
+      <div class="stat-card">
+        <h3>Total Pasien</h3>
+        <div class="value">120</div>
+      </div>
+      <div class="stat-card">
+        <h3>Total Penyakit</h3>
+        <div class="value">15</div>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <input type="text" placeholder="Cari pasien..." id="searchInput" />
+      <button>Cari</button>
+    </div>
+
+    <!-- View Toggle -->
+    <div class="view-toggle">
+      <button id="viewTable" class="active">Tabel</button>
+      <button id="viewCard">Card</button>
+    </div>
+
+    <!-- Patient Table -->
+    <div id="tableView">
+      <table class="patient-table">
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Usia</th>
+            <th>Penyakit</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Andi</td>
+            <td>25</td>
+            <td>Flu</td>
+            <td>
+              <button class="action-btn edit-btn">Edit</button>
+              <button class="action-btn delete-btn">Hapus</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Budi</td>
+            <td>30</td>
+            <td>Demam</td>
+            <td>
+              <button class="action-btn edit-btn">Edit</button>
+              <button class="action-btn delete-btn">Hapus</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Citra</td>
+            <td>28</td>
+            <td>Batuk</td>
+            <td>
+              <button class="action-btn edit-btn">Edit</button>
+              <button class="action-btn delete-btn">Hapus</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Patient Card (hidden by default) -->
+    <div id="cardView" style="display: none;">
+      <div class="patient-card" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="font-weight: bold; color: #1f2937;">Andi</h3>
+        <p>Usia: 25</p>
+        <p>Penyakit: Flu</p>
+        <div style="margin-top: 10px;">
+          <button class="action-btn edit-btn">Edit</button>
+          <button class="action-btn delete-btn">Hapus</button>
+        </div>
+      </div>
+      <div class="patient-card" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="font-weight: bold; color: #1f2937;">Budi</h3>
+        <p>Usia: 30</p>
+        <p>Penyakit: Demam</p>
+        <div style="margin-top: 10px;">
+          <button class="action-btn edit-btn">Edit</button>
+          <button class="action-btn delete-btn">Hapus</button>
+        </div>
+      </div>
+      <div class="patient-card" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+        <h3 style="font-weight: bold; color: #1f2937;">Citra</h3>
+        <p>Usia: 28</p>
+        <p>Penyakit: Batuk</p>
+        <div style="margin-top: 10px;">
+          <button class="action-btn edit-btn">Edit</button>
+          <button class="action-btn delete-btn">Hapus</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
