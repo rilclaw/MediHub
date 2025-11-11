@@ -7,36 +7,27 @@ require('dotenv').config();
 
 const PATIENT_SERVICE_URL = process.env.PATIENT_SERVICE_URL; 
 
-// POST /api/records - Membuat rekam medis dengan verifikasi Patient Service
 router.post('/', async (req, res) => {
-    // 1. Ambil data dari req.body (Express style)
     const { patient_id, diagnosis, treatment, visit_date } = req.body;
-    
-    // Validasi input dasar
     if (!patient_id || !diagnosis || !treatment || !visit_date) {
         return res.status(400).json({ message: 'Semua field wajib diisi: patient_id, diagnosis, treatment, visit_date' });
     }
 
     try {
-        // Panggil endpoint GET /api/patients/:id di Patient Service (Port 3001)
         await axios.get(`${PATIENT_SERVICE_URL}/api/patients/${patient_id}`);
         
 
     } catch (error) {
-        // Tampilkan error di terminal Medical Record Service
         console.error('AXIOS INTEGRATION FAILED:', error.message); 
         console.error('Request URL:', `${PATIENT_SERVICE_URL}/api/patients/${patient_id}`);
         
-        // ... Logika 404
         if (error.response && error.response.status === 404) {
             return res.status(404).json({ message: 'Gagal: Patient ID tidak ditemukan (Verifikasi API Gagal).' });
         }
         
-        // Error koneksi/lainnya
         return res.status(500).json({ message: 'Error komunikasi dengan Patient Service.' });
     }
 
-    // --- 3. Simpan Rekam Medis ke DB lokal setelah verifikasi sukses ---
     const sql = `
         INSERT INTO medical_records (patient_id, diagnosis, treatment, visit_date)
         VALUES (?, ?, ?, ?)
@@ -54,7 +45,6 @@ router.post('/', async (req, res) => {
     });
 });
 
-// get all
 router.get('/', (req, res) => {
     const sql = `SELECT * FROM medical_records ORDER BY visit_date DESC`;
     db.query(sql, (err, results) => {
@@ -71,7 +61,6 @@ router.get('/', (req, res) => {
     });
 });
 
-// get detail by record id
 router.get('/:id', (req, res) => {
     const recordId = req.params.id;
     

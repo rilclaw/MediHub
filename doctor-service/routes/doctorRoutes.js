@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db'); 
 
+const DOCTOR_SERVICE_URL = process.env.DOCTOR_SERVICE_URL; 
+
+
 // post
 router.post('/', (req, res) => {
     const { name, specialty, contact } = req.body;
