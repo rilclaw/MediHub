@@ -49,6 +49,43 @@ function getUrlParam(name) {
   return urlParams.get(name);
 }
 
+// === DASHBOARD STATS ===
+async function updateDashboardStats() {
+  try {
+    const res = await fetch(API_BASE.patients);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    const patients = await res.json();
+
+    // 1. Update Total Pasien
+    const totalPatientsEl = document.getElementById('totalPatients');
+    if (totalPatientsEl) {
+      totalPatientsEl.textContent = patients.length;
+    }
+
+    // 2. Update Total Penyakit Unik
+    const totalDiseasesEl = document.getElementById('totalDiseases');
+    if (totalDiseasesEl) {
+      // a. Ambil hanya kolom 'disease' dari semua pasien
+      const allDiseases = patients.map(p => p.disease);
+
+      // b. Bersihkan data (Hapus yang kosong/null & samakan huruf kecil/besar)
+      const validDiseases = allDiseases
+        .filter(d => d && d.trim() !== '') // Hapus yang kosong
+        .map(d => d.toLowerCase().trim()); // Ubah ke huruf kecil biar 'Flu' & 'flu' dianggap sama
+
+      // c. Gunakan Set untuk menghapus duplikat otomatis
+      const uniqueDiseases = new Set(validDiseases);
+
+      // d. Tampilkan jumlah uniknya (size)
+      totalDiseasesEl.textContent = uniqueDiseases.size;
+    }
+
+  } catch (err) {
+    console.error('Gagal muat statistik dashboard:', err);
+  }
+}
+
 // === PASIEN ===
 async function fetchPatients() {
   const tableView = document.getElementById('tableView')?.querySelector('tbody');
@@ -203,7 +240,11 @@ async function fetchAppointments() {
           <td>${dt.toLocaleDateString('id-ID')} ${time}</td>
           <td><span class="status-badge ${statusClass}">${a.status}</span></td>
           <td>
-            <button class="action-btn delete-btn" onclick="cancelAppointment(${a.id})">Batalkan</button>
+            <div style="display: flex; gap: 5px;">
+              <button class="action-btn" style="background-color: #f59e0b; color: white;" onclick="cancelAppointment(${a.id})">Batal</button>
+              
+              <button class="action-btn delete-btn" onclick="handleDelete('appointment', ${a.id})">Hapus</button>
+            </div>
           </td>
         </tr>
       `;
@@ -215,32 +256,48 @@ async function fetchAppointments() {
   }
 }
 
-// === CRUD: DELETE ===
+// === CRUD: DELETE (UPDATED DEBUG VERSION) ===
 async function handleDelete(type, id) {
-  const typeMap = {
-    patient: 'pasien',
-    doctor: 'dokter',
-    record: 'rekam medis'
+  const config = {
+    patient:     { url: API_BASE.patients,     label: 'Pasien' },
+    doctor:      { url: API_BASE.doctors,      label: 'Dokter' },
+    record:      { url: API_BASE.records,      label: 'Rekam Medis' },
+    appointment: { url: API_BASE.appointments, label: 'Janji Temu' }
   };
-  const typeName = typeMap[type] || type;
-  
-  if (!confirm(`Yakin hapus ${typeName} ini?`)) return;
 
-  const url = type === 'patient' 
-    ? `${API_BASE.patients}/${id}`
-    : type === 'doctor'
-    ? `${API_BASE.doctors}/${id}`
-    : `${API_BASE.records}/${id}`;
+  const target = config[type];
+
+  if (!target) {
+    console.error(`Tipe delete '${type}' tidak dikenali.`);
+    return;
+  }
+
+  if (!confirm(`Yakin hapus ${target.label} ini? Data tidak bisa dikembalikan.`)) return;
 
   try {
-    const res = await fetch(url, { method: 'DELETE' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    console.log(`Mencoba menghapus: ${target.url}/${id}`); // Debug URL
 
-    showNotification(`✅ ${typeName.charAt(0).toUpperCase() + typeName.slice(1)} berhasil dihapus`);
-    location.reload();
+    const res = await fetch(`${target.url}/${id}`, { 
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    // Cek jika server mengirim pesan error spesifik
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({})); // Coba baca JSON error
+      throw new Error(errorData.message || errorData.error || `HTTP Status ${res.status}`);
+    }
+
+    showNotification(`✅ ${target.label} berhasil dihapus`);
+    
+    // Refresh halaman
+    setTimeout(() => location.reload(), 1000); 
 
   } catch (err) {
-    showNotification(`❌ Gagal hapus ${typeName}`, 'error');
+    console.error("Detail Error:", err); // Lihat console browser (F12)
+    showNotification(`❌ Gagal hapus: ${err.message}`, 'error');
   }
 }
 
@@ -712,6 +769,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // PAGE-SPECIFIC LOGIC
   const path = window.location.pathname;
+  if (path.includes('index.html') || path === '/') {
+    updateDashboardStats(); 
+  } 
 
   if (path.includes('index.html')) {
     fetchPatients();
