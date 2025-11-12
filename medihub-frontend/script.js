@@ -155,7 +155,7 @@ async function fetchDoctors() {
   }
 }
 
-// === JANJI TEMU ===
+// === JANJI TEMU (Updated) ===
 async function fetchAppointments() {
   const list = document.getElementById('appointmentsList');
   if (!list) return;
@@ -180,16 +180,27 @@ async function fetchAppointments() {
     const docMap = Object.fromEntries(doctors.map(d => [d.id, d]));
 
     list.innerHTML = appointments.length ? appointments.map(a => {
-      const pat = patMap[a.patientId] || { name: 'Pasien Tidak Ditemukan' };
-      const doc = docMap[a.doctorId] || { name: 'Dokter Tidak Ditemukan' };
-      const dt = new Date(a.appointmentDate);
+      // --- PERBAIKAN DI SINI (Gunakan snake_case sesuai database) ---
+      
+      // Gunakan a.patient_id (bukan a.patientId)
+      const pat = patMap[a.patient_id] || { name: 'Pasien Tidak Ditemukan' };
+      
+      // Gunakan a.doctor_id (bukan a.doctorId)
+      const doc = docMap[a.doctor_id] || { name: 'Dokter Tidak Ditemukan' };
+      
+      // Gunakan a.appointment_date (bukan a.appointmentDate)
+      const dt = new Date(a.appointment_date);
+      
+      // Gunakan a.appointment_time (bukan a.appointmentTime)
+      const time = a.appointment_time || ''; 
+
       const statusClass = a.status === 'confirmed' ? 'status-confirmed' : a.status === 'cancelled' ? 'status-cancelled' : 'status-pending';
 
       return `
         <tr>
           <td>${pat.name}</td>
           <td>${doc.name}</td>
-          <td>${dt.toLocaleDateString('id-ID')} ${a.appointmentTime}</td>
+          <td>${dt.toLocaleDateString('id-ID')} ${time}</td>
           <td><span class="status-badge ${statusClass}">${a.status}</span></td>
           <td>
             <button class="action-btn delete-btn" onclick="cancelAppointment(${a.id})">Batalkan</button>
@@ -206,27 +217,41 @@ async function fetchAppointments() {
 
 // === CRUD: DELETE ===
 async function handleDelete(type, id) {
-  if (!confirm(`Yakin hapus ${type === 'patient' ? 'pasien' : 'dokter'} ini?`)) return;
+  const typeMap = {
+    patient: 'pasien',
+    doctor: 'dokter',
+    record: 'rekam medis'
+  };
+  const typeName = typeMap[type] || type;
+  
+  if (!confirm(`Yakin hapus ${typeName} ini?`)) return;
 
   const url = type === 'patient' 
     ? `${API_BASE.patients}/${id}`
-    : `${API_BASE.doctors}/${id}`;
+    : type === 'doctor'
+    ? `${API_BASE.doctors}/${id}`
+    : `${API_BASE.records}/${id}`;
 
   try {
     const res = await fetch(url, { method: 'DELETE' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    showNotification(`✅ ${type === 'patient' ? 'Pasien' : 'Dokter'} berhasil dihapus`);
+    showNotification(`✅ ${typeName.charAt(0).toUpperCase() + typeName.slice(1)} berhasil dihapus`);
     location.reload();
 
   } catch (err) {
-    showNotification(`❌ Gagal hapus ${type}`, 'error');
+    showNotification(`❌ Gagal hapus ${typeName}`, 'error');
   }
 }
 
 // === CRUD: EDIT ===
 function handleEdit(type, id) {
-  const page = type === 'patient' ? 'edit-patient.html' : 'edit-doctor.html';
+  const pageMap = {
+    patient: 'edit-patient.html',
+    doctor: 'edit-doctor.html',
+    record: 'edit-medical-record.html'
+  };
+  const page = pageMap[type] || 'index.html';
   window.location.href = `${page}?id=${id}`;
 }
 
@@ -446,7 +471,7 @@ async function cancelAppointment(id) {
 
   try {
     const res = await fetch(`${API_BASE.appointments}/${id}`, {
-      method: 'PATCH', // atau PUT, tergantung backend
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: 'cancelled' })
     });
@@ -457,7 +482,199 @@ async function cancelAppointment(id) {
     fetchAppointments();
 
   } catch (err) {
+    console.error('Cancel error:', err);
     showNotification('❌ Gagal membatalkan', 'error');
+  }
+}
+
+// === MEDICAL RECORDS ===
+async function fetchMedicalRecords() {
+  const list = document.getElementById('medicalRecordsList');
+  if (!list) return;
+
+  try {
+    const [recRes, patRes] = await Promise.all([
+      fetch(API_BASE.records),
+      fetch(API_BASE.patients)
+    ]);
+
+    if (!recRes.ok) throw new Error(`Records: HTTP ${recRes.status}`);
+    if (!patRes.ok) throw new Error(`Patients: HTTP ${patRes.status}`);
+
+    const records = await recRes.json();
+    const patients = await patRes.json();
+
+    // Buat peta untuk lookup cepat
+    const patMap = Object.fromEntries(patients.map(p => [p.id, p]));
+
+    list.innerHTML = records.length ? records.map(r => {
+      const pat = patMap[r.patient_id] || { name: 'Pasien Tidak Ditemukan' };
+      const dt = new Date(r.visit_date);
+
+      return `
+        <tr>
+          <td>${pat.name}</td>
+          <td>${r.diagnosis || '–'}</td>
+          <td>${r.treatment || '–'}</td>
+          <td>${dt.toLocaleDateString('id-ID')}</td>
+          <td>
+            <button class="action-btn edit-btn" onclick="handleEdit('record', ${r.id})">Edit</button>
+            <button class="action-btn delete-btn" onclick="handleDelete('record', ${r.id})">Hapus</button>
+          </td>
+        </tr>
+      `;
+    }).join('') : '<tr><td colspan="5" class="text-center py-4">Belum ada rekam medis</td></tr>';
+
+  } catch (err) {
+    console.error('Fetch records gagal:', err);
+    showNotification('❌ Gagal muat rekam medis', 'error');
+  }
+}
+
+// === MEDICAL RECORDS: LOAD OPTIONS ===
+async function loadMedicalRecordOptions() {
+  try {
+    const patRes = await fetch(API_BASE.patients);
+    if (!patRes.ok) throw new Error('Gagal muat pasien');
+
+    const patients = await patRes.json();
+
+    // Isi dropdown
+    const patSelect = document.getElementById('patientId');
+    if (patSelect) {
+      patSelect.innerHTML = '<option value="">-- Pilih Pasien --</option>' +
+        patients.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    }
+
+  } catch (err) {
+    showNotification('❌ Gagal muat daftar pasien', 'error');
+  }
+}
+
+// === MEDICAL RECORDS: CREATE ===
+async function submitMedicalRecord(event) {
+  event.preventDefault();
+
+  const patientIdElement = document.getElementById('patientId');
+  const diagnosisElement = document.getElementById('diagnosis');
+  const treatmentElement = document.getElementById('treatment');
+  const visitDateElement = document.getElementById('visitDate');
+
+  if (!patientIdElement || !diagnosisElement || !treatmentElement || !visitDateElement) {
+    console.error("FATAL: Salah satu elemen form rekam medis tidak ditemukan.");
+    return showNotification('⚠️ Kesalahan Form', 'error');
+  }
+
+  const patientIdVal = patientIdElement.value;
+  const diagnosisVal = diagnosisElement.value;
+  const treatmentVal = treatmentElement.value;
+  const visitDateVal = visitDateElement.value;
+  
+  if (!patientIdVal || !diagnosisVal || !treatmentVal || !visitDateVal) {
+    return showNotification('⚠️ Semua kolom wajib diisi', 'error');
+  }
+  
+  const payload = {
+    patient_id: parseInt(patientIdVal),
+    diagnosis: diagnosisVal,
+    treatment: treatmentVal,
+    visit_date: visitDateVal
+  };
+  
+  if (isNaN(payload.patient_id)) {
+    return showNotification('⚠️ Pasien tidak valid', 'error');
+  }
+
+  try {
+    const res = await fetch(API_BASE.records, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+
+    showNotification('✅ Rekam medis berhasil ditambahkan!');
+    document.getElementById('medicalRecordForm').reset();
+    setTimeout(() => window.location.href = 'medical-records.html', 1500);
+
+  } catch (err) {
+    showNotification(`❌ Gagal tambah rekam medis: ${err.message}`, 'error');
+  }
+}
+
+// === MEDICAL RECORDS: LOAD FOR EDIT ===
+async function loadMedicalRecordForEdit() {
+  const id = getUrlParam('id');
+  if (!id) return;
+
+  try {
+    const [recRes, patRes] = await Promise.all([
+      fetch(`${API_BASE.records}/${id}`),
+      fetch(API_BASE.patients)
+    ]);
+
+    if (!recRes.ok) throw new Error(`HTTP ${recRes.status}`);
+    const record = await recRes.json();
+    const patients = await patRes.json();
+
+    // Fill form
+    document.getElementById('recordId').value = record.id;
+    document.getElementById('diagnosis').value = record.diagnosis || '';
+    document.getElementById('treatment').value = record.treatment || '';
+    
+    // Format date for input[type="date"]
+    if (record.visit_date) {
+      const dt = new Date(record.visit_date);
+      const formattedDate = dt.toISOString().split('T')[0];
+      document.getElementById('visitDate').value = formattedDate;
+    }
+
+    // Fill patient dropdown
+    const patSelect = document.getElementById('patientId');
+    if (patSelect) {
+      patSelect.innerHTML = '<option value="">-- Pilih Pasien --</option>' +
+        patients.map(p => `<option value="${p.id}" ${p.id === record.patient_id ? 'selected' : ''}>${p.name}</option>`).join('');
+    }
+
+  } catch (err) {
+    console.error('Load record error:', err);
+    showNotification('❌ Gagal muat data rekam medis', 'error');
+    setTimeout(() => history.back(), 2000);
+  }
+}
+
+// === MEDICAL RECORDS: UPDATE ===
+async function submitEditMedicalRecord(event) {
+  event.preventDefault();
+  
+  const id = document.getElementById('recordId').value;
+  if (!id) return showNotification('ID tidak ditemukan', 'error');
+
+  const payload = {
+    diagnosis: document.getElementById('diagnosis').value,
+    treatment: document.getElementById('treatment').value,
+    visit_date: document.getElementById('visitDate').value
+  };
+
+  try {
+    const res = await fetch(`${API_BASE.records}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    showNotification('✅ Rekam medis berhasil diperbarui!');
+    setTimeout(() => window.location.href = 'medical-records.html', 1500);
+
+  } catch (err) {
+    console.error('Update error:', err);
+    showNotification('❌ Gagal update rekam medis', 'error');
   }
 }
 
@@ -486,7 +703,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (searchInput) {
     searchInput.addEventListener('input', function() {
       const term = this.value.toLowerCase();
-      document.querySelectorAll('#tableView tbody tr, #cardView > div, #appointmentsList tr').forEach(el => {
+      document.querySelectorAll('#tableView tbody tr, #cardView > div, #appointmentsList tr, #medicalRecordsList tr').forEach(el => {
         const text = el.textContent.toLowerCase();
         el.style.display = text.includes(term) ? '' : 'none';
       });
@@ -523,11 +740,15 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAppointmentOptions();
     document.getElementById('appointmentForm')?.addEventListener('submit', submitAppointment);
   }
-  else if (path.includes('add-doctor.html')) {
-  document.getElementById('doctorForm')?.addEventListener('submit', e => submitAdd('doctor', e));
-  } 
-  else if (path.includes('book-appointment.html')) {
-    loadAppointmentOptions();
-    document.getElementById('appointmentForm')?.addEventListener('submit', submitAppointment);
+  else if (path.includes('medical-records.html')) {
+    fetchMedicalRecords();
+  }
+  else if (path.includes('add-medical-record.html')) {
+    loadMedicalRecordOptions();
+    document.getElementById('medicalRecordForm')?.addEventListener('submit', submitMedicalRecord);
+  }
+  else if (path.includes('edit-medical-record.html')) {
+    loadMedicalRecordForEdit();
+    document.getElementById('editMedicalRecordForm')?.addEventListener('submit', submitEditMedicalRecord);
   }
 });

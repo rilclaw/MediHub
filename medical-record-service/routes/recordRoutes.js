@@ -161,6 +161,7 @@ router.put('/:id', async (req, res) => {
         // Ambil data terbaru untuk response
         db.query('SELECT * FROM medical_records WHERE id = ?', [recordId], (err2, results) => {
              if (err2) return res.status(500).json({ error: err2.message });
+             
              res.status(200).json({
                  message: 'Detail Rekam Medis berhasil diperbarui tanpa memverifikasi Patient Service!',
                  record: results[0]

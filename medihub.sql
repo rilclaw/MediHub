@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1:3307
--- Waktu pembuatan: 10 Nov 2025 pada 12.02
--- Versi server: 10.4.32-MariaDB
--- Versi PHP: 8.2.12
+-- Host: localhost
+-- Generation Time: Nov 12, 2025 at 12:06 PM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,93 +24,190 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `medical_records`
+-- Table structure for table `appointments`
 --
 
-CREATE TABLE `medical_records` (
+CREATE TABLE `appointments` (
   `id` int(11) NOT NULL,
-  `patient_id` int(11) DEFAULT NULL,
-  `diagnosis` varchar(255) DEFAULT NULL,
-  `treatment` text DEFAULT NULL,
-  `visit_date` date DEFAULT NULL
+  `patient_id` int(11) NOT NULL,
+  `doctor_id` int(11) NOT NULL,
+  `appointment_date` datetime NOT NULL,
+  `appointment_time` time DEFAULT NULL,
+  `reason` varchar(255) NOT NULL,
+  `status` enum('Scheduled','Completed','Cancelled','Rescheduled') DEFAULT 'Scheduled',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `medical_records`
+-- Dumping data for table `appointments`
 --
 
-INSERT INTO `medical_records` (`id`, `patient_id`, `diagnosis`, `treatment`, `visit_date`) VALUES
-(1, 2, 'Demam Tinggi', 'Paracetamol dan istirahat cukup', '2025-11-10'),
-(2, 1, 'Flu tinggi Tinggi', 'Paracetamol dan istirahat cukup', '2025-11-15'),
-(3, 5, 'Demam Tinggi', 'Paracetamol dan istirahat cukup', '0000-00-00'),
-(4, 5, 'Demam Tinggi', 'Paracetamol dan istirahat cukup', '0000-00-00'),
-(5, 5, 'Demam Tinggi', 'Paracetamol dan istirahat cukup', '2025-11-15');
+INSERT INTO `appointments` (`id`, `patient_id`, `doctor_id`, `appointment_date`, `appointment_time`, `reason`, `status`, `created_at`, `updated_at`) VALUES
+(3, 3, 1, '2025-10-10 00:00:00', NULL, 'Mau liat sunjae', 'Scheduled', '2025-11-12 02:07:06', '2025-11-12 02:07:06'),
+(4, 3, 1, '2025-10-10 00:00:00', NULL, 'Mau liat sunjae', 'Scheduled', '2025-11-12 02:07:07', '2025-11-12 02:07:07'),
+(5, 3, 1, '2025-10-10 00:00:00', NULL, 'Mau liat sunjae', 'Scheduled', '2025-11-12 02:07:08', '2025-11-12 02:07:08'),
+(6, 3, 1, '2025-10-10 00:00:00', NULL, 'Mau liat sunjae', 'Scheduled', '2025-11-12 02:07:08', '2025-11-12 02:07:08'),
+(7, 3, 1, '2025-10-10 00:00:00', NULL, 'Mau liat sunjae', 'Scheduled', '2025-11-12 02:07:09', '2025-11-12 02:07:09'),
+(9, 3, 1, '2025-10-10 00:00:00', NULL, 'Mau liat sunjae', 'Scheduled', '2025-11-12 08:42:46', '2025-11-12 08:42:46'),
+(11, 3, 1, '2025-10-10 00:00:00', NULL, 'Mau liat sunjae', 'Scheduled', '2025-11-12 08:45:20', '2025-11-12 08:45:20'),
+(13, 8, 3, '2025-10-29 00:00:00', '20:02:00', 'qsdfg', 'Scheduled', '2025-11-12 11:02:00', '2025-11-12 11:02:00');
 
 -- --------------------------------------------------------
 
 --
--- Struktur dari tabel `patients`
+-- Table structure for table `doctors`
+--
+
+CREATE TABLE `doctors` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `specialty` varchar(100) NOT NULL,
+  `contact` varchar(15) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `doctors`
+--
+
+INSERT INTO `doctors` (`id`, `name`, `specialty`, `contact`) VALUES
+(1, 'Ryu', 'Paru paruww', '098765234'),
+(3, 'Ryu', 'Paru', '098765234'),
+(6, 'wertgyh', 'dfgh', '23456'),
+(7, 'wekqjnkj', 'wert', '23456'),
+(10, 'asdfgdh', 'ertey', '2345'),
+(11, 'safgd', 'safdg', '234');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medical_records`
+--
+
+CREATE TABLE `medical_records` (
+  `id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `diagnosis` varchar(255) NOT NULL,
+  `treatment` text DEFAULT NULL,
+  `visit_date` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `medical_records`
+--
+
+INSERT INTO `medical_records` (`id`, `patient_id`, `diagnosis`, `treatment`, `visit_date`) VALUES
+(1, 2, 'None', 'None', '2025-08-08'),
+(2, 3, 'None', 'None', '2025-08-08'),
+(4, 2, 'None', 'None', '2025-08-08'),
+(6, 3, 'askjhfkjsa', 'wjjkbjk', '2025-10-10');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `patients`
 --
 
 CREATE TABLE `patients` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `age` int(11) DEFAULT NULL CHECK (`age` >= 0),
+  `age` varchar(50) DEFAULT NULL,
   `gender` enum('Male','Female','Other') NOT NULL,
-  `disease` varchar(100) DEFAULT NULL,
-  `address` varchar(200) DEFAULT NULL
+  `disease` varchar(150) DEFAULT NULL,
+  `address` varchar(256) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data untuk tabel `patients`
+-- Dumping data for table `patients`
 --
 
 INSERT INTO `patients` (`id`, `name`, `age`, `gender`, `disease`, `address`) VALUES
-(1, 'claw', 24, 'Male', 'Flu', 'Jakarta Selatan'),
-(2, 'DAVINA', 25, 'Female', 'Flu', 'Bandung'),
-(3, 'jeje', 15, 'Female', 'Flu', '  Temanggung'),
-(4, 'Rani Rahmawati', 24, 'Female', 'Flu', 'Jakarta Selatan'),
-(5, 'Bunga', 14, 'Female', 'Demam', 'Jakarta Utara');
+(2, 'Mella editt', '8', 'Female', 'None', 'Sudden Shower'),
+(3, 'Galih', '8', 'Female', 'None', 'Sudden Shower'),
+(6, 'Habbil', '8', 'Female', 'None', 'Sudden Shower'),
+(7, 'Habbil', '8', 'Female', 'None', 'Sudden Shower'),
+(8, 'Habbil', '8', 'Female', 'None', 'Sudden Shower'),
+(9, 'Habbil', '8', 'Female', 'None', 'Sudden Shower'),
+(10, 'Habbil', '8', 'Female', 'None', 'Sudden Shower'),
+(11, 'Habbil', '8', 'Female', 'None', 'Sudden Shower'),
+(13, 'Habbil', '8', 'Female', 'None', 'Sudden Shower'),
+(14, 'Habbil', '8', 'Female', 'None', 'Sudden Shower'),
+(15, 'Habbil', '8', 'Female', 'None', 'Sudden Shower'),
+(16, 'Habbil', '8', 'Female', 'None', 'Sudden Shower'),
+(21, 'testt 2 heeehhee', '12', 'Female', '123er', 'wedf');
 
 --
 -- Indexes for dumped tables
 --
 
 --
--- Indeks untuk tabel `medical_records`
+-- Indexes for table `appointments`
+--
+ALTER TABLE `appointments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `patient_id` (`patient_id`),
+  ADD KEY `doctor_id` (`doctor_id`);
+
+--
+-- Indexes for table `doctors`
+--
+ALTER TABLE `doctors`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `medical_records`
 --
 ALTER TABLE `medical_records`
   ADD PRIMARY KEY (`id`),
   ADD KEY `patient_id` (`patient_id`);
 
 --
--- Indeks untuk tabel `patients`
+-- Indexes for table `patients`
 --
 ALTER TABLE `patients`
   ADD PRIMARY KEY (`id`);
 
 --
--- AUTO_INCREMENT untuk tabel yang dibuang
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT untuk tabel `medical_records`
+-- AUTO_INCREMENT for table `appointments`
+--
+ALTER TABLE `appointments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `doctors`
+--
+ALTER TABLE `doctors`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `medical_records`
 --
 ALTER TABLE `medical_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- AUTO_INCREMENT untuk tabel `patients`
+-- AUTO_INCREMENT for table `patients`
 --
 ALTER TABLE `patients`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
--- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
+-- Constraints for dumped tables
 --
 
 --
--- Ketidakleluasaan untuk tabel `medical_records`
+-- Constraints for table `appointments`
+--
+ALTER TABLE `appointments`
+  ADD CONSTRAINT `appointments_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `appointments_ibfk_2` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `medical_records`
 --
 ALTER TABLE `medical_records`
   ADD CONSTRAINT `medical_records_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`);

@@ -65,7 +65,21 @@ router.get('/', (req, res) => {
     const sql = 'SELECT * FROM appointments ORDER BY appointment_date DESC';
     db.query(sql, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
+        
+        // Transform snake_case ke camelCase untuk frontend
+        const transformed = results.map(appointment => ({
+            id: appointment.id,
+            patientId: appointment.patient_id,
+            doctorId: appointment.doctor_id,
+            appointmentDate: appointment.appointment_date,
+            appointmentTime: appointment.appointment_time,
+            reason: appointment.reason,
+            status: appointment.status,
+            createdAt: appointment.created_at,
+            updatedAt: appointment.updated_at
+        }));
+        
+        res.json(transformed);
     });
 });
 
@@ -77,7 +91,22 @@ router.get('/:id', (req, res) => {
         if (results.length === 0) {
             return res.status(404).json({ message: 'Janji temu tidak ditemukan' });
         }
-        res.json(results[0]); 
+        
+        // Transform snake_case ke camelCase untuk frontend
+        const appointment = results[0];
+        const transformed = {
+            id: appointment.id,
+            patientId: appointment.patient_id,
+            doctorId: appointment.doctor_id,
+            appointmentDate: appointment.appointment_date,
+            appointmentTime: appointment.appointment_time,
+            reason: appointment.reason,
+            status: appointment.status,
+            createdAt: appointment.created_at,
+            updatedAt: appointment.updated_at
+        };
+        
+        res.json(transformed); 
     });
 });
 
@@ -140,9 +169,24 @@ router.put('/:id', async (req, res) => {
         // Ambil data terbaru
         db.query('SELECT * FROM appointments WHERE id = ?', [appointmentId], (err2, results) => {
             if (err2) return res.status(500).json({ error: err2.message });
+            
+            // Transform snake_case ke camelCase untuk frontend
+            const appointment = results[0];
+            const transformed = {
+                id: appointment.id,
+                patientId: appointment.patient_id,
+                doctorId: appointment.doctor_id,
+                appointmentDate: appointment.appointment_date,
+                appointmentTime: appointment.appointment_time,
+                reason: appointment.reason,
+                status: appointment.status,
+                createdAt: appointment.created_at,
+                updatedAt: appointment.updated_at
+            };
+            
             res.status(200).json({
                 message: 'Janji temu berhasil diperbarui!',
-                appointment: results[0]
+                appointment: transformed
             });
         });
     });

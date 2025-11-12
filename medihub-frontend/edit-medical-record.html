@@ -1,0 +1,70 @@
+<!-- edit-medical-record.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediHub - Edit Rekam Medis</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <aside class="sidebar">
+    <h1>MediHub</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="add-patient.html">Pasien</a></li>
+        <li><a href="doctors.html">Dokter</a></li>
+        <li><a href="appointments.html">Janji Temu</a></li>
+        <li><a href="medical-records.html" class="active">Rekam Medis</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="header">
+      <h2>Edit Rekam Medis</h2>
+      <a href="medical-records.html" class="profile-btn" style="text-decoration: none;">← Kembali</a>
+    </header>
+
+    <div class="form-container">
+      <form id="editMedicalRecordForm" class="patient-form">
+        <input type="hidden" id="recordId" name="recordId" />
+        
+        <div class="form-group">
+          <label for="patientId">Pasien *</label>
+          <select id="patientId" name="patientId" disabled>
+            <option value="">-- Pilih Pasien --</option>
+          </select>
+          <small style="color: #666;">Patient ID tidak dapat diubah</small>
+        </div>
+
+        <div class="form-group">
+          <label for="diagnosis">Diagnosis *</label>
+          <textarea id="diagnosis" name="diagnosis" rows="3" placeholder="Masukkan diagnosis" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="treatment">Pengobatan *</label>
+          <textarea id="treatment" name="treatment" rows="3" placeholder="Masukkan pengobatan" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="visitDate">Tanggal Kunjungan *</label>
+          <input type="date" id="visitDate" name="visitDate" required />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Update</button>
+          <a href="medical-records.html" class="btn-secondary">Batal</a>
+        </div>
+      </form>
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
