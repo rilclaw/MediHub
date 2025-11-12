@@ -1,0 +1,72 @@
+<!-- book-appointment.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediHub - Buat Janji</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <aside class="sidebar">
+    <h1>MediHub</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="add-patient.html">Add Pasien</a></li>
+        <li><a href="doctors.html">Dokter</a></li>
+        <li><a href="appointments.html">Janji Temu</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="header">
+      <h2>Buat Janji Temu</h2>
+      <button class="profile-btn" onclick="window.history.back()">Kembali</button>
+    </header>
+
+    <div class="form-container">
+      <h2>Jadwalkan Kunjungan</h2>
+      <form id="appointmentForm">
+        <div class="form-group">
+          <label for="patientId">Pasien</label>
+          <select id="patientId" name="patientId" required>
+            <option value="">-- Pilih Pasien --</option>
+            <!-- Diisi oleh JS -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="doctorId">Dokter</label>
+          <select id="doctorId" name="doctorId" required>
+            <option value="">-- Pilih Dokter --</option>
+            <!-- Diisi oleh JS -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="appointmentDate">Tanggal</label>
+          <input type="date" id="appointmentDate" name="appointmentDate" required />
+        </div>
+
+        <div class="form-group">
+          <label for="appointmentTime">Waktu</label>
+          <input type="time" id="appointmentTime" name="appointmentTime" required />
+        </div>
+
+        <div class="form-group">
+          <label for="reason">Alasan Kunjungan</label>
+          <textarea id="reason" name="reason" rows="3" placeholder="Contoh: Sakit kepala, demam, dll"></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">Buat Janji Temu</button>
+      </form>
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

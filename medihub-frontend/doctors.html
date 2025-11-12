@@ -1,0 +1,64 @@
+<!-- doctors.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediHub - Dokter</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <aside class="sidebar">
+    <h1>MediHub</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="add-patient.html">Add Pasien</a></li>
+        <li><a href="doctors.html" class="active">Dokter</a></li>
+        <li><a href="appointments.html">Janji Temu</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="header">
+      <h2>Daftar Dokter</h2>
+      <a href="add-doctor.html" class="profile-btn" style="text-decoration: none;">+ Tambah Dokter</a>
+    </header>
+
+    <div class="search-bar">
+      <input type="text" placeholder="Cari dokter..." id="searchInput" />
+      <button>Cari</button>
+    </div>
+
+    <div class="view-toggle">
+      <button id="viewTable" class="active">Tabel</button>
+      <button id="viewCard">Card</button>
+    </div>
+
+    <div id="tableView">
+      <table class="patient-table">
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Spesialisasi</th>
+            <th>No. STR</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+    
+        </tbody>
+      </table>
+    </div>
+
+    <div id="cardView" style="display: none;">
+
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

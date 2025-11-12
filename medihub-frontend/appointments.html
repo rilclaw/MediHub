@@ -1,0 +1,54 @@
+<!-- appointments.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediHub - Janji Temu</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <aside class="sidebar">
+    <h1>MediHub</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="add-patient.html">Add Pasien</a></li>
+        <li><a href="doctors.html">Dokter</a></li>
+        <li><a href="appointments.html" class="active">Janji Temu</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="header">
+      <h2>Janji Temu</h2>
+      <a href="book-appointment.html" class="profile-btn" style="text-decoration: none;">+ Buat Janji</a>
+    </header>
+
+    <div class="search-bar">
+      <input type="text" placeholder="Cari janji temu..." id="searchInput" />
+      <button>Cari</button>
+    </div>
+
+    <table class="patient-table">
+      <thead>
+        <tr>
+          <th>Pasien</th>
+          <th>Dokter</th>
+          <th>Tanggal & Waktu</th>
+          <th>Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="appointmentsList">
+        <!-- Diisi oleh JS -->
+      </tbody>
+    </table>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

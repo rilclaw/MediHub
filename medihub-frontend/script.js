@@ -1,6 +1,5 @@
-// script.js — MediHub Frontend + Backend Integration (with EDIT)
+// script.js — MediHub: Full Integration (Patients + Doctors + Appointments)
 
-// 🔧 Konfigurasi API
 const API_BASE = {
   patients: 'http://localhost:3001/api/patients',
   records: 'http://localhost:3002/api/records',
@@ -8,7 +7,7 @@ const API_BASE = {
   appointments: 'http://localhost:3004/api/appointments'
 };
 
-// 🌐 Helper: Tampilkan notifikasi (mirip toast)
+// === NOTIFIKASI ===
 function showNotification(message, type = 'success') {
   const notif = document.createElement('div');
   notif.textContent = message;
@@ -44,7 +43,13 @@ function showNotification(message, type = 'success') {
   }
 }
 
-// 📥 Ambil data pasien dari backend
+// === HELPER: GET URL PARAM ===
+function getUrlParam(name) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(name);
+}
+
+// === PASIEN ===
 async function fetchPatients() {
   const tableView = document.getElementById('tableView')?.querySelector('tbody');
   const cardView = document.getElementById('cardView');
@@ -54,262 +59,441 @@ async function fetchPatients() {
 
   try {
     const res = await fetch(API_BASE.patients);
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const patients = await res.json();
 
     if (statsCard) statsCard.textContent = patients.length;
 
-    // Render tabel
-    if (tableView) {
-      tableView.innerHTML = patients.length === 0 
-        ? '<tr><td colspan="4" class="text-center py-4">Tidak ada data pasien</td></tr>'
-        : patients.map(p => `
-          <tr>
-            <td>${p.name || '–'}</td>
-            <td>${p.age || '–'}</td>
-            <td>${p.disease || '–'}</td>
-            <td>
-              <button class="action-btn edit-btn" data-id="${p.id}" onclick="handleEdit(${p.id})">Edit</button>
-              <button class="action-btn delete-btn" data-id="${p.id}" onclick="handleDelete(${p.id})">Hapus</button>
-            </td>
-          </tr>
-        `).join('');
-    }
+    const renderRow = (p) => `
+      <tr>
+        <td>${p.name || '–'}</td>
+        <td>${p.age || '–'}</td>
+        <td>${p.disease || '–'}</td>
+        <td>
+          <button class="action-btn edit-btn" onclick="handleEdit('patient', ${p.id})">Edit</button>
+          <button class="action-btn delete-btn" onclick="handleDelete('patient', ${p.id})">Hapus</button>
+        </td>
+      </tr>
+    `;
 
-    // Render card
-    if (cardView) {
-      cardView.innerHTML = patients.length === 0
-        ? '<div class="text-center py-4 text-gray-500">Tidak ada data pasien</div>'
-        : patients.map(p => `
-          <div class="bg-white p-4 rounded-lg shadow-md mb-4">
-            <h3 class="font-bold text-lg text-gray-800">${p.name || '–'}</h3>
-            <p>Usia: ${p.age || '–'}</p>
-            <p>Penyakit: ${p.disease || '–'}</p>
-            <div class="mt-2">
-              <button class="action-btn edit-btn" data-id="${p.id}" onclick="handleEdit(${p.id})">Edit</button>
-              <button class="action-btn delete-btn" data-id="${p.id}" onclick="handleDelete(${p.id})">Hapus</button>
-            </div>
-          </div>
-        `).join('');
-    }
+    const renderCard = (p) => `
+      <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+        <h3 class="font-bold text-lg">${p.name || '–'}</h3>
+        <p>Usia: ${p.age || '–'}</p>
+        <p>Penyakit: ${p.disease || '–'}</p>
+        <div class="mt-2">
+          <button class="action-btn edit-btn" onclick="handleEdit('patient', ${p.id})">Edit</button>
+          <button class="action-btn delete-btn" onclick="handleDelete('patient', ${p.id})">Hapus</button>
+        </div>
+      </div>
+    `;
+
+    if (tableView) tableView.innerHTML = patients.length ? patients.map(renderRow).join('') : '<tr><td colspan="4" class="text-center py-4">Tidak ada data</td></tr>';
+    if (cardView) cardView.innerHTML = patients.length ? patients.map(renderCard).join('') : '<div class="text-center py-4">Tidak ada data</div>';
 
   } catch (err) {
-    console.error('Gagal fetch pasien:', err);
-    showNotification('❌ Gagal memuat data pasien: ' + err.message, 'error');
+    console.error('Fetch pasien gagal:', err);
+    showNotification('❌ Gagal muat pasien', 'error');
   }
 }
 
-// 🗑️ Hapus pasien
-async function handleDelete(id) {
-  if (!id || !confirm('Yakin ingin menghapus pasien ini?')) return;
+// === DOKTER ===
+async function fetchDoctors() {
+  const tableView = document.getElementById('tableView')?.querySelector('tbody');
+  const cardView = document.getElementById('cardView');
+  const list = document.getElementById('appointmentsList'); // for select options
+
+  if (!tableView && !cardView && !list) return;
 
   try {
-    const res = await fetch(`${API_BASE.patients}/${id}`, {
-      method: 'DELETE'
-    });
-
+    const res = await fetch(API_BASE.doctors);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const doctors = await res.json();
 
-    showNotification('✅ Pasien berhasil dihapus');
-    fetchPatients();
+    // Render tabel/card
+    if (tableView || cardView) {
+      const renderRow = (d) => `
+        <tr>
+          <td>${d.name || '–'}</td>
+          <td>${d.specialization || '–'}</td>
+          <td>${d.strNumber || '–'}</td>
+          <td>
+            <button class="action-btn edit-btn" onclick="handleEdit('doctor', ${d.id})">Edit</button>
+            <button class="action-btn delete-btn" onclick="handleDelete('doctor', ${d.id})">Hapus</button>
+          </td>
+        </tr>
+      `;
+
+      const renderCard = (d) => `
+        <div class="bg-white p-4 rounded-lg shadow-md mb-4">
+          <h3 class="font-bold text-lg">${d.name || '–'}</h3>
+          <p>Spesialisasi: ${d.specialization || '–'}</p>
+          <p>STR: ${d.strNumber || '–'}</p>
+          <div class="mt-2">
+            <button class="action-btn edit-btn" onclick="handleEdit('doctor', ${d.id})">Edit</button>
+            <button class="action-btn delete-btn" onclick="handleDelete('doctor', ${d.id})">Hapus</button>
+          </div>
+        </div>
+      `;
+
+      if (tableView) tableView.innerHTML = doctors.length ? doctors.map(renderRow).join('') : '<tr><td colspan="4" class="text-center py-4">Tidak ada data</td></tr>';
+      if (cardView) cardView.innerHTML = doctors.length ? doctors.map(renderCard).join('') : '<div class="text-center py-4">Tidak ada data</div>';
+    }
+
+    // Isi dropdown (untuk form janji temu)
+    if (list || document.getElementById('doctorId')) {
+      const select = document.getElementById('doctorId');
+      if (select) {
+        select.innerHTML = '<option value="">-- Pilih Dokter --</option>' + 
+          doctors.map(d => `<option value="${d.id}">${d.name} (${d.specialization})</option>`).join('');
+      }
+    }
 
   } catch (err) {
-    console.error('Gagal hapus pasien:', err);
-    showNotification('❌ Gagal menghapus pasien', 'error');
+    console.error('Fetch dokter gagal:', err);
+    showNotification('❌ Gagal muat dokter', 'error');
   }
 }
 
-// ✏️ Edit pasien — redirect ke halaman edit dengan ID
-function handleEdit(id) {
-  if (!id) return;
-  window.location.href = `edit-patient.html?id=${id}`;
+// === JANJI TEMU ===
+async function fetchAppointments() {
+  const list = document.getElementById('appointmentsList');
+  if (!list) return;
+
+  try {
+    const [aptRes, patRes, docRes] = await Promise.all([
+      fetch(API_BASE.appointments),
+      fetch(API_BASE.patients),
+      fetch(API_BASE.doctors)
+    ]);
+
+    if (!aptRes.ok) throw new Error(`Appointments: HTTP ${aptRes.status}`);
+    if (!patRes.ok) throw new Error(`Patients: HTTP ${patRes.status}`);
+    if (!docRes.ok) throw new Error(`Doctors: HTTP ${docRes.status}`);
+
+    const appointments = await aptRes.json();
+    const patients = await patRes.json();
+    const doctors = await docRes.json();
+
+    // Buat peta untuk lookup cepat
+    const patMap = Object.fromEntries(patients.map(p => [p.id, p]));
+    const docMap = Object.fromEntries(doctors.map(d => [d.id, d]));
+
+    list.innerHTML = appointments.length ? appointments.map(a => {
+      const pat = patMap[a.patientId] || { name: 'Pasien Tidak Ditemukan' };
+      const doc = docMap[a.doctorId] || { name: 'Dokter Tidak Ditemukan' };
+      const dt = new Date(a.appointmentDate);
+      const statusClass = a.status === 'confirmed' ? 'status-confirmed' : a.status === 'cancelled' ? 'status-cancelled' : 'status-pending';
+
+      return `
+        <tr>
+          <td>${pat.name}</td>
+          <td>${doc.name}</td>
+          <td>${dt.toLocaleDateString('id-ID')} ${a.appointmentTime}</td>
+          <td><span class="status-badge ${statusClass}">${a.status}</span></td>
+          <td>
+            <button class="action-btn delete-btn" onclick="cancelAppointment(${a.id})">Batalkan</button>
+          </td>
+        </tr>
+      `;
+    }).join('') : '<tr><td colspan="5" class="text-center py-4">Belum ada janji temu</td></tr>';
+
+  } catch (err) {
+    console.error('Fetch janji gagal:', err);
+    showNotification('❌ Gagal muat janji temu', 'error');
+  }
 }
 
-// 🔍 Ambil parameter URL (misal: ?id=5)
-function getUrlParam(name) {
-  const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get(name);
+// === CRUD: DELETE ===
+async function handleDelete(type, id) {
+  if (!confirm(`Yakin hapus ${type === 'patient' ? 'pasien' : 'dokter'} ini?`)) return;
+
+  const url = type === 'patient' 
+    ? `${API_BASE.patients}/${id}`
+    : `${API_BASE.doctors}/${id}`;
+
+  try {
+    const res = await fetch(url, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    showNotification(`✅ ${type === 'patient' ? 'Pasien' : 'Dokter'} berhasil dihapus`);
+    location.reload();
+
+  } catch (err) {
+    showNotification(`❌ Gagal hapus ${type}`, 'error');
+  }
 }
 
-// 📥 Muat data pasien untuk edit (prefill form)
-async function loadPatientForEdit() {
+// === CRUD: EDIT ===
+function handleEdit(type, id) {
+  const page = type === 'patient' ? 'edit-patient.html' : 'edit-doctor.html';
+  window.location.href = `${page}?id=${id}`;
+}
+
+// === CRUD: LOAD DATA FOR EDIT ===
+async function loadForEdit(type) {
   const id = getUrlParam('id');
   if (!id) return;
 
+  const url = type === 'patient' 
+    ? `${API_BASE.patients}/${id}`
+    : `${API_BASE.doctors}/${id}`;
+
   try {
-    const res = await fetch(`${API_BASE.patients}/${id}`);
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const patient = await res.json();
+    const data = await res.json();
 
-    // Isi form
-    document.getElementById('patientId').value = patient.id;
-    document.getElementById('name').value = patient.name || '';
-    document.getElementById('age').value = patient.age || '';
-    document.getElementById('disease').value = patient.disease || '';
-    document.getElementById('phone').value = patient.phone || '';
-    document.getElementById('address').value = patient.address || '';
+    Object.keys(data).forEach(key => {
+      const el = document.getElementById(key);
+      if (el) el.value = data[key] ?? '';
+    });
+
+    if (type === 'patient') document.getElementById('patientId').value = data.id;
+    if (type === 'doctor') document.getElementById('doctorId').value = data.id;
 
   } catch (err) {
-    console.error('Gagal muat data pasien:', err);
-    showNotification('❌ Gagal memuat data pasien untuk edit', 'error');
-    setTimeout(() => window.history.back(), 2000);
+    showNotification(`❌ Gagal muat data ${type}`, 'error');
+    setTimeout(() => history.back(), 2000);
   }
 }
 
-// 📤 Kirim edit pasien (PUT)
-async function updatePatient(data) {
-  const id = data.id;
-  if (!id) throw new Error('ID pasien tidak ditemukan');
-
-  const res = await fetch(`${API_BASE.patients}/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `HTTP ${res.status}`);
-  }
-
-  return res.json();
-}
-
-// 📤 Handle form edit submit
-async function handleEditFormSubmit(event) {
+// === CRUD: SUBMIT EDIT ===
+async function submitEdit(type, event) {
   event.preventDefault();
+  const id = type === 'patient' 
+    ? document.getElementById('patientId').value
+    : document.getElementById('doctorId').value;
+
+  if (!id) return showNotification('ID tidak ditemukan', 'error');
+
+  const url = type === 'patient' 
+    ? `${API_BASE.patients}/${id}`
+    : `${API_BASE.doctors}/${id}`;
+
+  const data = {};
   const form = event.target;
-  const submitBtn = form.querySelector('.submit-btn');
-
-  const data = {
-    id: parseInt(document.getElementById('patientId').value),
-    name: document.getElementById('name').value,
-    age: parseInt(document.getElementById('age').value) || null,
-    disease: document.getElementById('disease').value,
-    phone: document.getElementById('phone').value || '',
-    address: document.getElementById('address').value || ''
-  };
-
-  if (!data.name || !data.disease) {
-    showNotification('⚠️ Nama dan Penyakit wajib diisi', 'error');
-    return;
+  for (let [key, field] of Object.entries({
+    name: form.name,
+    age: form.age,
+    disease: form.disease,
+    phone: form.phone,
+    address: form.address,
+    specialization: form.specialization,
+    strNumber: form.strNumber,
+    email: form.email
+  })) {
+    if (field) {
+      data[key] = field.type === 'number' ? (field.value ? parseInt(field.value) : null) : field.value;
+    }
   }
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Menyimpan...';
 
   try {
-    await updatePatient(data);
-    showNotification('✅ Data pasien berhasil diperbarui!');
-    setTimeout(() => window.location.href = 'index.html', 1500);
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    showNotification(`✅ ${type === 'patient' ? 'Pasien' : 'Dokter'} berhasil diperbarui!`);
+    setTimeout(() => window.location.href = type === 'patient' ? 'index.html' : 'doctors.html', 1500);
+
   } catch (err) {
-    console.error('Gagal update pasien:', err);
-    showNotification('❌ ' + (err.message || 'Gagal menyimpan perubahan'), 'error');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Simpan Perubahan';
+    showNotification(`❌ Gagal update ${type}`, 'error');
   }
 }
 
-// 📤 Handle form tambah pasien (POST)
-async function addPatient(data) {
-  const res = await fetch(API_BASE.patients, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `HTTP ${res.status}`);
-  }
-
-  return res.json();
-}
-
-async function handleAddFormSubmit(event) {
+// === CRUD: ADD PATIENT/DOCTOR ===
+async function submitAdd(type, event) {
   event.preventDefault();
+  const url = type === 'patient' ? API_BASE.patients : API_BASE.doctors;
+
+  const data = {};
   const form = event.target;
-  const submitBtn = form.querySelector('.submit-btn');
-
-  const data = {
-    name: form.name.value,
-    age: parseInt(form.age.value) || null,
-    disease: form.disease.value,
-    phone: form.phone.value || '',
-    address: form.address.value || ''
-  };
-
-  if (!data.name || !data.disease) {
-    showNotification('⚠️ Nama dan Penyakit wajib diisi', 'error');
-    return;
+  for (let [key, field] of Object.entries({
+    name: form.name,
+    age: form.age,
+    disease: form.disease,
+    phone: form.phone,
+    address: form.address,
+    specialization: form.specialization,
+    strNumber: form.strNumber,
+    email: form.email
+  })) {
+    if (field) {
+      data[key] = field.type === 'number' ? (field.value ? parseInt(field.value) : null) : field.value;
+    }
   }
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Menyimpan...';
 
   try {
-    await addPatient(data);
-    showNotification('✅ Pasien berhasil ditambahkan!');
-    form.reset();
-    setTimeout(() => window.location.href = 'index.html', 1500);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    showNotification(`✅ ${type === 'patient' ? 'Pasien' : 'Dokter'} berhasil ditambahkan!`);
+    setTimeout(() => {
+      window.location.href = type === 'patient' ? 'index.html' : 'doctors.html';
+    }, 1500);
+
   } catch (err) {
-    console.error('Gagal tambah pasien:', err);
-    showNotification('❌ ' + (err.message || 'Gagal menyimpan data'), 'error');
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Simpan Pasien';
+    showNotification(`❌ Gagal tambah ${type}`, 'error');
   }
 }
 
-// 🔁 Inisialisasi halaman
+// === APPOINTMENT: LOAD OPTIONS ===
+async function loadAppointmentOptions() {
+  try {
+    const [patRes, docRes] = await Promise.all([
+      fetch(API_BASE.patients),
+      fetch(API_BASE.doctors)
+    ]);
+
+    if (!patRes.ok) throw new Error('Gagal muat pasien');
+    if (!docRes.ok) throw new Error('Gagal muat dokter');
+
+    const patients = await patRes.json();
+    const doctors = await docRes.json();
+
+    // Isi dropdown
+    const patSelect = document.getElementById('patientId');
+    const docSelect = document.getElementById('doctorId');
+
+    if (patSelect) {
+      patSelect.innerHTML = '<option value="">-- Pilih Pasien --</option>' +
+        patients.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    }
+    if (docSelect) {
+      docSelect.innerHTML = '<option value="">-- Pilih Dokter --</option>' +
+        doctors.map(d => `<option value="${d.id}">${d.name} (${d.specialization})</option>`).join('');
+    }
+
+  } catch (err) {
+    showNotification('❌ Gagal muat daftar pasien/dokter', 'error');
+  }
+}
+
+// === APPOINTMENT: CREATE ===
+async function submitAppointment(event) {
+  event.preventDefault();
+
+  const data = {
+    patientId: parseInt(document.getElementById('patientId').value),
+    doctorId: parseInt(document.getElementById('doctorId').value),
+    appointmentDate: document.getElementById('appointmentDate').value,
+    appointmentTime: document.getElementById('appointmentTime').value,
+    reason: document.getElementById('reason').value,
+    status: 'pending' // default
+  };
+
+  if (!data.patientId || !data.doctorId || !data.appointmentDate || !data.appointmentTime) {
+    return showNotification('⚠️ Semua kolom wajib diisi', 'error');
+  }
+
+  try {
+    const res = await fetch(API_BASE.appointments, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+
+    showNotification('✅ Janji temu berhasil dibuat!');
+    setTimeout(() => window.location.href = 'appointments.html', 1500);
+
+  } catch (err) {
+    showNotification(`❌ Gagal buat janji: ${err.message}`, 'error');
+  }
+}
+
+// === APPOINTMENT: CANCEL ===
+async function cancelAppointment(id) {
+  if (!confirm('Batalkan janji temu ini?')) return;
+
+  try {
+    const res = await fetch(`${API_BASE.appointments}/${id}`, {
+      method: 'PATCH', // atau PUT, tergantung backend
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'cancelled' })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    showNotification('✅ Janji temu dibatalkan');
+    fetchAppointments();
+
+  } catch (err) {
+    showNotification('❌ Gagal membatalkan', 'error');
+  }
+}
+
+// === INIT ===
 document.addEventListener('DOMContentLoaded', function() {
-  // Toggle view (tabel/card)
+  // Toggle view
   const tableBtn = document.getElementById('viewTable');
   const cardBtn = document.getElementById('viewCard');
-  const tableView = document.getElementById('tableView');
-  const cardView = document.getElementById('cardView');
-
-  if (tableBtn && cardBtn && tableView && cardView) {
-    tableBtn.addEventListener('click', () => {
-      tableView.style.display = 'block';
-      cardView.style.display = 'none';
+  if (tableBtn && cardBtn) {
+    tableBtn.onclick = () => {
+      document.getElementById('tableView').style.display = 'block';
+      document.getElementById('cardView').style.display = 'none';
       tableBtn.classList.add('active');
       cardBtn.classList.remove('active');
-    });
-    cardBtn.addEventListener('click', () => {
-      tableView.style.display = 'none';
-      cardView.style.display = 'block';
+    };
+    cardBtn.onclick = () => {
+      document.getElementById('tableView').style.display = 'none';
+      document.getElementById('cardView').style.display = 'block';
       cardBtn.classList.add('active');
       tableBtn.classList.remove('active');
-    });
+    };
   }
 
-  // Halaman Dashboard
-  if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-    fetchPatients();
-  }
-
-  // Halaman Edit: muat data pasien
-  if (window.location.pathname.includes('edit-patient.html')) {
-    loadPatientForEdit();
-    document.getElementById('editPatientForm')?.addEventListener('submit', handleEditFormSubmit);
-  }
-
-  // Halaman Tambah
-  if (window.location.pathname.includes('add-patient.html')) {
-    document.getElementById('patientForm')?.addEventListener('submit', handleAddFormSubmit);
-  }
-
-  // Search (client-side)
+  // SEARCH
   const searchInput = document.getElementById('searchInput');
   if (searchInput) {
     searchInput.addEventListener('input', function() {
       const term = this.value.toLowerCase();
-      document.querySelectorAll('#tableView tbody tr, #cardView > div').forEach(el => {
+      document.querySelectorAll('#tableView tbody tr, #cardView > div, #appointmentsList tr').forEach(el => {
         const text = el.textContent.toLowerCase();
         el.style.display = text.includes(term) ? '' : 'none';
       });
     });
+  }
+
+  // PAGE-SPECIFIC LOGIC
+  const path = window.location.pathname;
+
+  if (path.includes('index.html')) {
+    fetchPatients();
+  } 
+  else if (path.includes('doctors.html')) {
+    fetchDoctors();
+  } 
+  else if (path.includes('appointments.html')) {
+    fetchAppointments();
+  } 
+  else if (path.includes('edit-patient.html')) {
+    loadForEdit('patient');
+    document.getElementById('editPatientForm')?.addEventListener('submit', e => submitEdit('patient', e));
+  } 
+  else if (path.includes('edit-doctor.html')) {
+    loadForEdit('doctor');
+    document.getElementById('editDoctorForm')?.addEventListener('submit', e => submitEdit('doctor', e));
+  } 
+  else if (path.includes('add-patient.html')) {
+    document.getElementById('patientForm')?.addEventListener('submit', e => submitAdd('patient', e));
+  } 
+  else if (path.includes('add-doctor.html')) {
+    document.getElementById('doctorForm')?.addEventListener('submit', e => submitAdd('doctor', e));
+  } 
+  else if (path.includes('book-appointment.html')) {
+    loadAppointmentOptions();
+    document.getElementById('appointmentForm')?.addEventListener('submit', submitAppointment);
   }
 });
