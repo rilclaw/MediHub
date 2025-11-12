@@ -115,8 +115,8 @@ async function fetchDoctors() {
       const renderRow = (d) => `
         <tr>
           <td>${d.name || '–'}</td>
-          <td>${d.specialization || '–'}</td>
-          <td>${d.strNumber || '–'}</td>
+          <td>${d.specialty || '–'}</td>
+          <td>${d.contact || '–'}</td>
           <td>
             <button class="action-btn edit-btn" onclick="handleEdit('doctor', ${d.id})">Edit</button>
             <button class="action-btn delete-btn" onclick="handleDelete('doctor', ${d.id})">Hapus</button>
@@ -127,8 +127,8 @@ async function fetchDoctors() {
       const renderCard = (d) => `
         <div class="bg-white p-4 rounded-lg shadow-md mb-4">
           <h3 class="font-bold text-lg">${d.name || '–'}</h3>
-          <p>Spesialisasi: ${d.specialization || '–'}</p>
-          <p>STR: ${d.strNumber || '–'}</p>
+          <p>Spesialisasi: ${d.specialty || '–'}</p>
+          <p>STR: ${d.contact || '–'}</p>
           <div class="mt-2">
             <button class="action-btn edit-btn" onclick="handleEdit('doctor', ${d.id})">Edit</button>
             <button class="action-btn delete-btn" onclick="handleDelete('doctor', ${d.id})">Hapus</button>
@@ -145,7 +145,7 @@ async function fetchDoctors() {
       const select = document.getElementById('doctorId');
       if (select) {
         select.innerHTML = '<option value="">-- Pilih Dokter --</option>' + 
-          doctors.map(d => `<option value="${d.id}">${d.name} (${d.specialization})</option>`).join('');
+          doctors.map(d => `<option value="${d.id}">${d.name} (${d.specialty})</option>`).join('');
       }
     }
 
@@ -276,12 +276,11 @@ async function submitEdit(type, event) {
   for (let [key, field] of Object.entries({
     name: form.name,
     age: form.age,
+    gender: form.gender,
     disease: form.disease,
-    phone: form.phone,
     address: form.address,
-    specialization: form.specialization,
-    strNumber: form.strNumber,
-    email: form.email
+    specialty: form.specialty,
+    contact: form.contact,
   })) {
     if (field) {
       data[key] = field.type === 'number' ? (field.value ? parseInt(field.value) : null) : field.value;
@@ -314,12 +313,11 @@ async function submitAdd(type, event) {
   for (let [key, field] of Object.entries({
     name: form.name,
     age: form.age,
+    gender: form.gender,
     disease: form.disease,
-    phone: form.phone,
     address: form.address,
-    specialization: form.specialization,
-    strNumber: form.strNumber,
-    email: form.email
+    specialty: form.specialty,
+    contact: form.contact,
   })) {
     if (field) {
       data[key] = field.type === 'number' ? (field.value ? parseInt(field.value) : null) : field.value;
@@ -368,7 +366,7 @@ async function loadAppointmentOptions() {
     }
     if (docSelect) {
       docSelect.innerHTML = '<option value="">-- Pilih Dokter --</option>' +
-        doctors.map(d => `<option value="${d.id}">${d.name} (${d.specialization})</option>`).join('');
+        doctors.map(d => `<option value="${d.id}">${d.name} (${d.specialty})</option>`).join('');
     }
 
   } catch (err) {

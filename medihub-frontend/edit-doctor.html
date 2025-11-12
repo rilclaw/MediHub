@@ -1,0 +1,63 @@
+<!-- edit-doctor.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MediHub - Edit Dokter</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <aside class="sidebar">
+    <h1>MediHub</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Beranda</a></li>
+        <li><a href="add-patient.html">Pasien</a></li>
+        <li><a href="doctors.html" class="active">Dokter</a></li>
+        <li><a href="appointments.html">Janji Temu</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="header">
+      <h2>Edit Data Dokter</h2>
+    </header>
+
+    <div class="form-container">
+      <h2>Edit Data Dokter</h2>
+      <form id="editDoctorForm">
+        <!-- ID disembunyikan -->
+        <input type="hidden" id="doctorId" name="id" />
+
+        <div class="form-group">
+          <label for="name">Nama Dokter</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+
+        <div class="form-group">
+          <label for="specialty">Spesialisasi</label>
+          <input type="text" id="specialty" name="specialty" required />
+        </div>
+
+        <div class="form-group">
+          <label for="contact">No. Telepon</label>
+          <input type="contact" id="contact" name="contact" />
+        </div>
+
+        <div class="flex gap-3">
+          <button type="submit" class="submit-btn">Simpan Perubahan</button>
+          <button type="button" class="submit-btn" style="background:#6b7280" onclick="window.history.back()">
+            Batal
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

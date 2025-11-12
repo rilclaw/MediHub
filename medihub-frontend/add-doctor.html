@@ -14,7 +14,7 @@
     <nav>
       <ul>
         <li><a href="index.html">Beranda</a></li>
-        <li><a href="add-patient.html">Add Pasien</a></li>
+        <li><a href="add-patient.html">Pasien</a></li>
         <li><a href="doctors.html">Dokter</a></li>
         <li><a href="appointments.html">Janji Temu</a></li>
       </ul>
@@ -24,7 +24,6 @@
   <main class="main-content">
     <header class="header">
       <h2>Tambah Dokter</h2>
-      <button class="profile-btn" onclick="window.history.back()">Kembali</button>
     </header>
 
     <div class="form-container">
@@ -36,23 +35,13 @@
         </div>
 
         <div class="form-group">
-          <label for="specialization">Spesialisasi</label>
-          <input type="text" id="specialization" name="specialization" required />
+          <label for="specialty">Spesialisasi</label>
+          <input type="text" id="specialty" name="specialty" required />
         </div>
 
         <div class="form-group">
-          <label for="strNumber">No. STR</label>
-          <input type="text" id="strNumber" name="strNumber" required />
-        </div>
-
-        <div class="form-group">
-          <label for="phone">No. Telepon</label>
-          <input type="tel" id="phone" name="phone" />
-        </div>
-
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" />
+          <label for="contact">No. Telepon</label>
+          <input type="text" id="contact" name="contact" />
         </div>
 
         <button type="submit" class="submit-btn">Simpan Dokter</button>
