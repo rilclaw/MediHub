@@ -376,39 +376,68 @@ async function loadAppointmentOptions() {
 
 // === APPOINTMENT: CREATE ===
 async function submitAppointment(event) {
-  event.preventDefault();
+  event.preventDefault();
 
-  const data = {
-    patientId: parseInt(document.getElementById('patientId').value),
-    doctorId: parseInt(document.getElementById('doctorId').value),
-    appointmentDate: document.getElementById('appointmentDate').value,
-    appointmentTime: document.getElementById('appointmentTime').value,
-    reason: document.getElementById('reason').value,
-    status: 'pending' // default
-  };
+  // 1. AMBIL NILAI DARI ELEMEN HTML (Menggunakan ID HTML yang BENAR: camelCase)
+  const patientIdElement = document.getElementById('patientId');
+  const doctorIdElement = document.getElementById('doctorId');
+  const appointmentDateElement = document.getElementById('appointmentDate');
+  const appointmentTimeElement = document.getElementById('appointmentTime'); // Field Waktu
+  const reasonElement = document.getElementById('reason');
 
-  if (!data.patientId || !data.doctorId || !data.appointmentDate || !data.appointmentTime) {
-    return showNotification('⚠️ Semua kolom wajib diisi', 'error');
-  }
+  // 2. Null/Exist Check (PENTING untuk mencegah TypeError: reading 'value')
+  // Jika salah satu elemen (misalnya Waktu) tidak ada di HTML, fungsi akan berhenti di sini.
+  if (!patientIdElement || !doctorIdElement || !appointmentDateElement || !appointmentTimeElement || !reasonElement) {
+    console.error("FATAL: Salah satu elemen form janji temu tidak ditemukan di HTML.");
+    return showNotification('⚠️ Kesalahan Form: Beberapa kolom input tidak ditemukan.', 'error');
+  }
 
-  try {
-    const res = await fetch(API_BASE.appointments, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
+  const patientIdVal = patientIdElement.value;
+  const doctorIdVal = doctorIdElement.value;
+  const appointmentDateVal = appointmentDateElement.value;
+  const appointmentTimeVal = appointmentTimeElement.value; // Nilai waktu
+  const reasonVal = reasonElement.value;
+  
+  // 3. Validasi Data Lengkap
+  if (!patientIdVal || !doctorIdVal || !appointmentDateVal || !appointmentTimeVal) {
+    return showNotification('⚠️ Semua kolom wajib diisi (Pasien, Dokter, Tanggal, Waktu).', 'error');
+  }
+  
+  // --- 4. BENTUK PAYLOAD (KEY HARUS SNAKE_CASE UNTUK BACKEND) ---
+  const payload = {
+    // Mengirim key snake_case: patient_id, doctor_id, appointment_date
+    patient_id: parseInt(patientIdVal),
+    doctor_id: parseInt(doctorIdVal),
+    appointment_date: appointmentDateVal,
+    appointment_time: appointmentTimeVal, 
+    reason: reasonVal
+  };
+  
+  // Final Check: Cek apakah ID berhasil di-parse
+  if (isNaN(payload.patient_id) || isNaN(payload.doctor_id)) {
+    return showNotification('⚠️ Pasien/Dokter tidak valid. Muat ulang halaman.', 'error');
+  }
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP ${res.status}`);
-    }
+  
+  try {
+    const res = await fetch(API_BASE.appointments, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload) // <-- Kirim payload yang sudah disinkronkan
+    });
 
-    showNotification('✅ Janji temu berhasil dibuat!');
-    setTimeout(() => window.location.href = 'appointments.html', 1500);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
 
-  } catch (err) {
-    showNotification(`❌ Gagal buat janji: ${err.message}`, 'error');
-  }
+    showNotification('✅ Janji temu berhasil dibuat!');
+    document.getElementById('appointmentForm').reset(); // Reset form setelah sukses
+    setTimeout(() => window.location.href = 'appointments.html', 1500);
+
+  } catch (err) {
+    showNotification(`❌ Gagal buat janji: ${err.message}`, 'error');
+  }
 }
 
 // === APPOINTMENT: CANCEL ===
