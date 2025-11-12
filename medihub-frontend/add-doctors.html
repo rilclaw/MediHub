@@ -29,7 +29,7 @@
 
     <div class="form-container">
       <h2>Tambah Dokter Baru</h2>
-      <form id="doctorForm">
+      <form id="doctorForm"> <!-- ✅ -->
         <div class="form-group">
           <label for="name">Nama Dokter</label>
           <input type="text" id="name" name="name" required />
@@ -62,5 +62,26 @@
   </main>
 
   <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('✅ add-doctor.html loaded');
+      const form = document.getElementById('doctorForm');
+      if (form) {
+        console.log('✅ Form doctorForm ditemukan');
+        form.addEventListener('submit', (e) => {
+          console.log('📤 Submit form dokter dipicu');
+          console.log('Data:', {
+            name: document.getElementById('name').value,
+            specialization: document.getElementById('specialization').value,
+            strNumber: document.getElementById('strNumber').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value
+          });
+        });
+      } else {
+        console.error('❌ Form doctorForm TIDAK DITEMUKAN!');
+      }
+    });
+  </script>
 </body>
 </html>

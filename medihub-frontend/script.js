@@ -496,4 +496,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAppointmentOptions();
     document.getElementById('appointmentForm')?.addEventListener('submit', submitAppointment);
   }
+  else if (path.includes('add-doctor.html')) {
+  document.getElementById('doctorForm')?.addEventListener('submit', e => submitAdd('doctor', e));
+  } 
+  else if (path.includes('book-appointment.html')) {
+    loadAppointmentOptions();
+    document.getElementById('appointmentForm')?.addEventListener('submit', submitAppointment);
+  }
 });

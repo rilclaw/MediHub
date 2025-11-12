@@ -34,7 +34,6 @@
           <label for="patientId">Pasien</label>
           <select id="patientId" name="patientId" required>
             <option value="">-- Pilih Pasien --</option>
-            <!-- Diisi oleh JS -->
           </select>
         </div>
 
@@ -42,7 +41,6 @@
           <label for="doctorId">Dokter</label>
           <select id="doctorId" name="doctorId" required>
             <option value="">-- Pilih Dokter --</option>
-            <!-- Diisi oleh JS -->
           </select>
         </div>
 
@@ -58,7 +56,7 @@
 
         <div class="form-group">
           <label for="reason">Alasan Kunjungan</label>
-          <textarea id="reason" name="reason" rows="3" placeholder="Contoh: Sakit kepala, demam, dll"></textarea>
+          <textarea id="reason" name="reason" rows="3"></textarea>
         </div>
 
         <button type="submit" class="submit-btn">Buat Janji Temu</button>
@@ -68,5 +66,27 @@
   </main>
 
   <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('✅ book-appointment.html loaded');
+      const form = document.getElementById('appointmentForm');
+      if (form) {
+        console.log('✅ Form appointmentForm ditemukan');
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          console.log('📤 Submit form janji dipicu');
+          console.log('Data:', {
+            patientId: document.getElementById('patientId').value,
+            doctorId: document.getElementById('doctorId').value,
+            date: document.getElementById('appointmentDate').value,
+            time: document.getElementById('appointmentTime').value,
+            reason: document.getElementById('reason').value
+          });
+        });
+      } else {
+        console.error('❌ Form appointmentForm TIDAK DITEMUKAN!');
+      }
+    });
+  </script>
 </body>
 </html>
